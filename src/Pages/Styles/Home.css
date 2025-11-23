@@ -1,0 +1,70 @@
+.Home{
+    display: flex;
+}
+.logo{
+    text-align: center;
+    height: 60px;
+    width: 100%;
+    font-size: 40px;
+    background-color: seagreen;
+}
+.profile-section{
+    display: flex;
+    align-items: center;
+    background-color: rgb(22, 129, 216);
+    padding: 10px;
+    color: white;
+}
+.profile{
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 10px;
+    background-color: rgb(238, 233, 233);
+}
+.one {
+    background-color: rgb(9, 175, 204);
+    width:15% ;
+    height: 100vh;
+    margin-left: 20px;
+}
+
+.Menu{
+    display: flex;
+    flex-direction: column;
+}
+.menu-btn{
+    width:70% ;
+    margin: 10px 0;
+    border-radius: 10px;
+    background-color:transparent;
+    border: none;
+    color: rgb(255, 255, 255);
+    text-align: left;
+    padding: 10px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+
+.two{
+    background-color: rgb(240, 240, 240);
+    width: 20%;
+    height: 100vh;
+    border-radius: 10px;
+}
+.search-bar{
+    width: 90%;
+    margin: 10px auto;
+    display: flex;
+    align-items: center;
+    background-color: white;
+    padding: 5px;
+    border-radius: 10px;
+}
+.search-input{
+    width: 100%;
+    border: none;
+    outline: none;
+    margin-left: 10px;
+}
