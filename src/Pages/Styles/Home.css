@@ -2,11 +2,19 @@
     display: flex;
 }
 .logo{
-    text-align: center;
     height: 60px;
     width: 100%;
     font-size: 40px;
     background-color: rgb(34, 105, 197);
+}
+.logo button{
+    background-color: transparent;
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    margin-left: 10px;
+    margin-top: 10px;
 }
 .profile-section{
     display: flex;
@@ -29,9 +37,10 @@
 }
 .one {
     background-color: rgb(239, 240, 239);
-    width:15% ;
+    width:20% ;
     height: 100vh;
-    margin-left: 20px;
+    margin-left: 0px;
+    position: fixed;
 }
 
 .menu{
@@ -64,6 +73,16 @@
     height: 100vh;
     border-radius: 10px;
 }
+.chat-header{
+    display: flex;
+}
+.icon{
+    width:40px;
+    height: 40px;
+    padding: 5px;
+    cursor: pointer;
+
+}
 .search-bar{
     width: 90%;
     margin: 10px auto;
@@ -81,7 +100,7 @@
     
 }
 .active-user{
-    height: 900px;
+    height: 600px;
     overflow-y: auto;
 }
 .user-item{
@@ -112,11 +131,21 @@
     margin-left: auto;
     
 }
-
+.sittings{
+    text-align: center;
+    background-color: #ffffff;
+    border-radius: 5px;
+    height: 30px;
+    width: 80px;
+    font-size: 14px;
+    color: #0a78d1;
+    margin: 10px auto;
+    padding-top:5px ;
+}
 
 
 .three {
-    width: 65%;
+    width: 80%;
     height: 100vh;
     background-color: #ffffff;
     display: flex;
@@ -217,20 +246,14 @@
 
 @media (max-width: 768px) {
     
-    .two {
+    .three {
         width: 100%;
         height: 100vh;
         margin: 0;
         border-radius: 0;
     }
-    .three {
-        display:none;
-    }
     .chat-body {
         height: auto;
-    }
-    .one {
-        display: none;
     }
     .user-status{
         display: none;
