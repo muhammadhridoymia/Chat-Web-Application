@@ -6,7 +6,9 @@ import photo from "../Photos/man1.avif"
 
 export default function Menu({setopen}) {  
     
-    
+    const storedUserData = localStorage.getItem("userSigninData");
+    const userData = storedUserData ? JSON.parse(storedUserData) : null;
+
     return (
     <div className='one'>
             <div className='logo'>
@@ -14,7 +16,7 @@ export default function Menu({setopen}) {
             </div>
             <div className='profile-section'>
                 <div className='profile'> <img src={photo} alt={""} className='profile-pic' /></div>
-                <div className='name'>Hridoy</div>
+                <div className='name'>{userData ? userData.name : "Guest"}</div>
                 <button onClick={() => setopen(false)}>Back</button>
             </div>
             <div className='menu'>

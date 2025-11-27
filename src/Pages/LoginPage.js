@@ -1,10 +1,14 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import "./Styles/Signin.css";
 
 
 const Login = () => {
+  const navigate = useNavigate();
   const [loading, setLoading] = React.useState(false);
   const [message, setMessage] = React.useState("");
+
+
   const handleSubmit = (event) => {
     event.preventDefault();
     setLoading(true);
@@ -17,14 +21,22 @@ const Login = () => {
       password,
     };
 
-    // Store the data in localStorage as a JSON string
-    localStorage.setItem("userSigninData", JSON.stringify(userData));
 
-    setTimeout(() => {
-      setMessage("Log In Successful!");
-      // alert("Log In Successful!");
+
+    setTimeout(async () => {
+      const res= await fetch('http://localhost:5000/api/users/login',{
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json'
+        },
+        body:JSON.stringify(userData)
+      });
+      const data= await res.json();
+      setMessage(data.message);
+      localStorage.setItem("userSigninData", JSON.stringify(data.user));
       setLoading(false);
       form.reset();
+      navigate("/");
     }, 5000);
 
   };

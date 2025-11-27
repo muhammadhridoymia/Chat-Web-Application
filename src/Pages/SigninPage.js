@@ -7,7 +7,7 @@ const SigninPage = () => {
 const navigate = useNavigate();
   const [loading, setLoading] = React.useState(false);
   const [message, setMessage] = React.useState("");
-  const handleSubmit = (event) => {
+  const handleSubmit =  async (event) => {
     event.preventDefault();
     setLoading(true);
     const form = event.target;
@@ -21,14 +21,22 @@ const navigate = useNavigate();
       password,
     };
 
-    // Store the data in localStorage as a JSON string
-    localStorage.setItem("userSigninData", JSON.stringify(userData));
+  
 
-    setTimeout(() => {
-      setMessage("Sign In Successful!");
-      // alert("Sign In Successful!");
+    setTimeout(async () => {
+      const res= await fetch('http://localhost:5000/api/users/signup',{
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json'
+        },
+        body:JSON.stringify(userData)
+      });
+      const data= await res.json();
+      setMessage(data.message);
+      // alert("Log In Successful!");
       setLoading(false);
       form.reset();
+      navigate("/login");
     }, 5000);
 
   };
