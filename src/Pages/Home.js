@@ -6,19 +6,18 @@ import Menu from './Menu'
 import UserList from './UserList'
 import Message from './Message'
 
-
 export default function Home() {
   const navigate=useNavigate();
 const [open, setopen] = React.useState(false);
 
 
-
 useEffect(()=>{
   const storedUserData = localStorage.getItem("userSigninData");
   if(!storedUserData){
-    navigate('/signin');
+  navigate('/signin');
   }
 }, [])
+
 
   return (
     <div className='Home'>

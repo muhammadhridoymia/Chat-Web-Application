@@ -1,40 +1,30 @@
-import React from "react";
-import photo from "../Photos/man1.avif"
-import alice from "../Photos/man2.webp"
-import bob from "../Photos/woman1.avif"
-import charlie from "../Photos/woman2.webp"
+import React, { useEffect } from "react";
 import "./Styles/Home.css";
 import notificationIcon from "../Photos/notification.png";
+import { useContext } from "react";
+import { CoustomContext } from "./Context";
+
+
+
+
+
+
 
 export default function UserList({ setopen }) {  
+    const {setUserData}=useContext(CoustomContext)
+const [userset, setuserset] = React.useState([]);
+const data = JSON.parse(localStorage.getItem("userSigninData"));
+const _id = data ? data._id : null;
 
-    const user =[
-    {name: 'Alice', profilePic: alice},
-    {name: 'Bob', profilePic: bob},
-    {name: 'Charlie', profilePic: charlie},   
-    {name: 'Diana', profilePic: photo},
-    {name: 'Alice', profilePic: alice},
-    {name: 'Bob', profilePic: bob},
-    {name: 'Charlie', profilePic: charlie},   
-    {name: 'Diana', profilePic: photo},
-    {name: 'Alice', profilePic: alice},
-    {name: 'Bob', profilePic: bob},
-    {name: 'Charlie', profilePic: charlie},   
-    {name: 'Diana', profilePic: photo},
-    {name: 'Alice', profilePic: alice},
-    {name: 'Bob', profilePic: bob},
-    {name: 'Charlie', profilePic: charlie},   
-    {name: 'Diana', profilePic: photo},
-    {name: 'Alice', profilePic: alice},
-    {name: 'Bob', profilePic: bob},
-    {name: 'Charlie', profilePic: charlie},   
-    {name: 'Diana', profilePic: photo},
-    {name: 'Alice', profilePic: alice},
-    {name: 'Bob', profilePic: bob},
-    {name: 'Charlie', profilePic: charlie},   
-    {name: 'Diana', profilePic: photo},
-]
-
+useEffect(() => {
+const user=async()=>{
+    const response = await fetch(`http://localhost:5000/api/users/users/${_id}`);
+    const data = await response.json();
+    console.log(data);
+    setuserset(data|| []);
+}
+user();
+}, []);
 
     return (
     <div className='two'>
@@ -47,10 +37,11 @@ export default function UserList({ setopen }) {
                 <input type="text" placeholder='Search...' className='search-bar' />
                 <div className='active'>
                     <div className='active-user'>
-                        {user.map((usr, index) => (
-                            <div key={index} className='user-item'>
-                                <img src={usr.profilePic} alt={""} className='user-pic' />
-                                <div className='user-name'>{usr.name}</div>
+
+                        {userset.map((user, index) => (
+                            <div key={index} className='user-item' onClick={()=> setUserData(user)}>
+                                <img src={user.profilePic} alt={""} className='user-pic' />
+                                <div className='user-name'>{user.name}</div>
                                 <div className='user-status'> online</div>
                             </div>
                         ))}

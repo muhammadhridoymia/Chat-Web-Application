@@ -1,14 +1,19 @@
 import React from "react";
 import "./Styles/Home.css";
+import { useNavigate } from "react-router-dom";
 import photo from "../Photos/man1.avif"
 
 
 
 export default function Menu({setopen}) {  
-    
-    const storedUserData = localStorage.getItem("userSigninData");
-    const userData = storedUserData ? JSON.parse(storedUserData) : null;
 
+    const navigate=useNavigate()
+    const userData = JSON.parse(localStorage.getItem("userSigninData"));
+
+    const LogoutAccount = () => {
+        localStorage.removeItem("userSigninData");
+        navigate("/signin")
+    }
     return (
     <div className='one'>
             <div className='logo'>
@@ -26,7 +31,7 @@ export default function Menu({setopen}) {
                 <button className='menu-btn'>Join Group</button>
                 <button className='menu-btn'>Change profile</button>
                 <button className='menu-btn'>Delete Account</button>
-                <button className='menu-btn'>Logout</button>
+                <button className='menu-btn' onClick={()=> LogoutAccount()}>Logout</button>
             </div>
         </div>
   );

@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import "./Styles/Home.css";
 import { socket } from "./socket"; 
+import { useContext } from "react";
+import { CoustomContext } from "./Context";
 import alice from "../Photos/man2.webp";
 import videoCallIcon from "../Photos/videoCall.avif";
 import phoneCallIcon from "../Photos/callLogo.png";
@@ -9,9 +11,22 @@ import VoiceIcon from "../Photos/voiceAdd.webp";
 
 export default function Message() {
 
-  // Temporary user IDs (later we will make dynamic)
-  const senderId = "hridoy123";      
-  const receiverId = "alice123";
+  const {UserData}=useContext(CoustomContext)
+  console.log("Receiveduser id",UserData?UserData._id:"")
+
+  const [Sanderid, setSanderid] = useState(null);
+  useEffect(() => {
+     const LoginData = JSON.parse(localStorage.getItem("userSigninData"));
+     setSanderid(LoginData);
+     console.log("sanderId:", LoginData ? LoginData._id : "");
+     // Join user's private room
+      socket.emit("joinRoom", LoginData._id);
+  }, []);
+
+
+
+  const senderId = Sanderid?Sanderid._id:"";      
+  const receiverId = UserData?UserData._id:"";
 
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
@@ -40,12 +55,37 @@ export default function Message() {
     setMessage("");
   };
 
+
+
+//Old Messages
+  useEffect(() => {
+    const fetchHistory = async () => {
+        if (!senderId || !UserData?._id) return;
+
+        try {
+            const response = await fetch(
+                `http://localhost:5000/messages/${senderId}/${UserData._id}`
+            );
+            const data = await response.json();
+            setMessages(data); // Save chat history
+        } catch (err) {
+            console.log("Error fetching history:", err);
+        }
+    };
+
+    fetchHistory();
+}, [senderId, UserData]);
+
+
+
+
+
   return (
     <div className='three'>
       {/* Header */}
       <div className='chat-header'>
         <img src={alice} alt="" className='chat-user-pic' />
-        Chat with Alice <p className='online-now'>Online now</p>
+        {UserData?UserData.name:"Sellect a Person"}<p className='online-now'>Online now</p>
         <img src={videoCallIcon} alt="" className='chat-icon' />
         <img src={phoneCallIcon} alt="" className='chat-icon' />
       </div>

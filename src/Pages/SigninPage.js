@@ -33,10 +33,11 @@ const navigate = useNavigate();
       });
       const data= await res.json();
       setMessage(data.message);
+      localStorage.setItem("userSigninData", JSON.stringify(userData));
       // alert("Log In Successful!");
       setLoading(false);
       form.reset();
-      navigate("/login");
+      navigate("/");
     }, 5000);
 
   };

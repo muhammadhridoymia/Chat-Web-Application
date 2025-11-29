@@ -36,7 +36,9 @@ const Login = () => {
       localStorage.setItem("userSigninData", JSON.stringify(data.user));
       setLoading(false);
       form.reset();
-      navigate("/");
+      if(data.user){
+        navigate("/")
+      };
     }, 5000);
 
   };
