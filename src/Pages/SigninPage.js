@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../Pages/Styles/Signin.css";
 
@@ -7,6 +7,15 @@ const SigninPage = () => {
 const navigate = useNavigate();
   const [loading, setLoading] = React.useState(false);
   const [message, setMessage] = React.useState("");
+
+
+  // useEffect(()=>{
+  //   const user=localStorage.getItem("userSigninData")
+  //   if(user!==""||user!==null){
+  //     navigate("/")
+  //   }
+  // })
+
   const handleSubmit =  async (event) => {
     event.preventDefault();
     setLoading(true);
@@ -33,7 +42,7 @@ const navigate = useNavigate();
       });
       const data= await res.json();
       setMessage(data.message);
-      localStorage.setItem("userSigninData", JSON.stringify(userData));
+      localStorage.setItem("userSigninData", JSON.stringify(data.user));
       // alert("Log In Successful!");
       setLoading(false);
       form.reset();

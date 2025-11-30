@@ -1,11 +1,13 @@
-import React from "react";
+import React, { useState } from "react";
 import "./Styles/Home.css";
 import { useNavigate } from "react-router-dom";
 import photo from "../Photos/man1.avif"
+import AddFriends from "./AddFriends";
 
 
 
 export default function Menu({setopen}) {  
+    const [back,setback]=useState(false)
 
     const navigate=useNavigate()
     const userData = JSON.parse(localStorage.getItem("userSigninData"));
@@ -15,7 +17,9 @@ export default function Menu({setopen}) {
         navigate("/signin")
     }
     return (
-    <div className='one'>
+        <>
+        {back?(<AddFriends setaddfriends={setback}/>):
+    (<div className='one'>
             <div className='logo'>
                 <button onClick={() => setopen(false)}>Back</button>
             </div>
@@ -25,14 +29,14 @@ export default function Menu({setopen}) {
                 <button onClick={() => setopen(false)}>Back</button>
             </div>
             <div className='menu'>
-                <div className='menu-btn'>menu</div>
-                <button className='menu-btn'>Add New</button>
+                <button className='menu-btn' onClick={()=> setback(true)}>Add New</button>
                 <button className='menu-btn'>Create Group</button>
                 <button className='menu-btn'>Join Group</button>
                 <button className='menu-btn'>Change profile</button>
                 <button className='menu-btn'>Delete Account</button>
                 <button className='menu-btn' onClick={()=> LogoutAccount()}>Logout</button>
             </div>
-        </div>
+        </div>)}
+        </>
   );
 }

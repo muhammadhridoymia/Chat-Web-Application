@@ -43,7 +43,8 @@ export default function Message() {
   }, []);
 
   // Send message to server
-  const handleSend = () => {
+  const handleSend = (e) => {
+    e.preventDefault();
     if (!message.trim()) return;
 
     socket.emit("sendMessage", {
@@ -108,15 +109,16 @@ export default function Message() {
       <div className='chat-input'>
         <img src={Imgadd} alt="" className='chat-icon' />
         <img src={VoiceIcon} alt="" className='chat-icon' />
-
+         
+         <form>
         <input
           type='text'
           placeholder='Type a message...'
           value={message}
           onChange={(e) => setMessage(e.target.value)}
         />
-
-        <button onClick={handleSend}>Send</button>
+        <button type="submit" onClick={handleSend}>Send</button>
+         </form>
       </div>
     </div>
   );

@@ -6,10 +6,6 @@ import { CoustomContext } from "./Context";
 
 
 
-
-
-
-
 export default function UserList({ setopen }) {  
     const {setUserData}=useContext(CoustomContext)
 const [userset, setuserset] = React.useState([]);
@@ -37,7 +33,10 @@ user();
                 <input type="text" placeholder='Search...' className='search-bar' />
                 <div className='active'>
                     <div className='active-user'>
-
+                        <div className="user-item" style={{background:'#04c91e',color:"white",borderRadius:"20px"}}>
+                                <img src={""} alt={""} className='user-pic' />
+                                <div className='user-name'>Self Message</div>
+                        </div>
                         {userset.map((user, index) => (
                             <div key={index} className='user-item' onClick={()=> setUserData(user)}>
                                 <img src={user.profilePic} alt={""} className='user-pic' />

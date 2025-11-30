@@ -4,6 +4,10 @@ import Home from './Pages/Home';
 import SignupPage from './Pages/SigninPage';
 import LoginPage from './Pages/LoginPage';
 import Message from './Pages/Message';  
+import AddFriends from './Pages/AddFriends';
+
+
+
 import './App.css';
 
 function App() {
@@ -14,6 +18,7 @@ function App() {
         <Route path='/signin' element={<SignupPage/>}/>
         <Route path='/login' element={<LoginPage/>}/>
         <Route path='/message' element={<Message/>}/>
+        <Route path='addfriends' element={<AddFriends/>}/>
       </Routers>
     </div>
   );
