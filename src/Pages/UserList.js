@@ -45,7 +45,7 @@ user();
                             </div>
                         ))}
                     </div>
-                    <div className='settings'>Settings</div>
+                    <div className='settings'>Recomendations</div>
                     
                 </div>
             </div>

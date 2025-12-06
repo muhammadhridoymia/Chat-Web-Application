@@ -18,7 +18,7 @@ export default function Menu({setopen}) {
     }
     return (
         <>
-        {back?(<AddFriends setaddfriends={setback}/>):
+        {back?(<AddFriends setaddfriend={setback}/>):
     (<div className='one'>
             <div className='logo'>
                 <button onClick={() => setopen(false)}>Back</button>
