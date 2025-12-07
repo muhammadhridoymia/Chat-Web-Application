@@ -3,11 +3,13 @@ import "./Styles/Home.css";
 import { useNavigate } from "react-router-dom";
 import photo from "../Photos/man1.avif"
 import AddFriends from "./AddFriends";
+import FriendRequest from "./FriendRequest";
 
 
 
 export default function Menu({setopen}) {  
-    const [back,setback]=useState(false)
+    const [back,setback]=useState(false);
+    const [frequst,setfrequest]=useState(false);
 
     const navigate=useNavigate()
     const userData = JSON.parse(localStorage.getItem("userSigninData"));
@@ -18,7 +20,8 @@ export default function Menu({setopen}) {
     }
     return (
         <>
-        {back?(<AddFriends setaddfriend={setback}/>):
+        {back?(<AddFriends setaddfriend={setback}/>)
+        :frequst?(<FriendRequest set={setfrequest}/>): 
     (<div className='one'>
             <div className='logo'>
                 <button onClick={() => setopen(false)}>Back</button>
@@ -30,6 +33,7 @@ export default function Menu({setopen}) {
             </div>
             <div className='menu'>
                 <button className='menu-btn' onClick={()=> setback(true)}>Add New</button>
+                <button className="menu-btn" onClick={()=> setfrequest(true)}>Friend Request</button>
                 <button className='menu-btn'>Create Group</button>
                 <button className='menu-btn'>Join Group</button>
                 <button className='menu-btn'>Change profile</button>

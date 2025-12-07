@@ -28,7 +28,6 @@ function AddFriends({ setaddfriend }) {
       const data = await res.json();
       if (data.users) {
         setDATA(data.users);
-        console.log(data.users)
       } else {
         setMessage(data.message || "No user found");
       }
@@ -42,19 +41,20 @@ function AddFriends({ setaddfriend }) {
   const FriendRequest= async()=>{
       setreqLoading(true)
     const fromId=userData._id
-    const toId=DATA._id
+    const toId=DATA._id;
+    console.log(fromId,toId)
     try {
-      const res= await fetch (`http://localhost:5000/api/users/find/$`,{
+      const res= await fetch (`http://localhost:5000/api/users/friend/request/`,{
         method:"POST",
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({fromId,toId})
       })
-      if(res){
+      if(res.json()){
         setreqmess("Succfully Request")
         setreqLoading(false)
       }
     } catch (error) {
-      
+      console.log(error)
     }
   }
 
