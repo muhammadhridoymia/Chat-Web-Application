@@ -7,7 +7,9 @@ import { CoustomContext } from "./Context";
 
 
 export default function UserList({ setopen }) {  
+
     const {setUserData}=useContext(CoustomContext)
+    const [groupsData, setGroupsData] = React.useState([]);
 const [userset, setuserset] = React.useState([]);
 const data = JSON.parse(localStorage.getItem("userSigninData"));
 const _id = data ? data._id : null;
@@ -20,7 +22,23 @@ const user=async()=>{
     setuserset(data|| []);
 }
 user();
+const fetchGroups=async()=>{
+    const response = await fetch(`http://localhost:5000/api/users/my/groups/${_id}`);
+    const data = await response.json();
+    console.log("Groups:",data);
+    setGroupsData(data|| []);
+}
+fetchGroups();
+
 }, []);
+
+
+        //Combine with type
+        const combined = [
+          ...groupsData.map(group => ({ ...group, type: "group" })),
+          ...userset.map(friend => ({ ...friend, type: "friend" }))
+        ];
+        console.log("Combined Data:", combined);
 
     return (
     <div className='two'>
@@ -37,7 +55,7 @@ user();
                                 <img src={""} alt={""} className='user-pic' />
                                 <div className='user-name'>Self Message</div>
                         </div>
-                        {userset.map((user, index) => (
+                        {combined.map((user, index) => (
                             <div key={index} className='user-item' onClick={()=> setUserData(user)}>
                                 <img src={user.profilePic} alt={""} className='user-pic' />
                                 <div className='user-name'>{user.name}</div>

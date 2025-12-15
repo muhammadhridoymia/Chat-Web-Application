@@ -5,6 +5,7 @@ import SignupPage from './Pages/SigninPage';
 import LoginPage from './Pages/LoginPage';
 import Message from './Pages/Message';  
 import AddFriends from './Pages/AddFriends';
+import CreateGroup from './Pages/CreateGroup';
 
 
 
@@ -18,7 +19,8 @@ function App() {
         <Route path='/signin' element={<SignupPage/>}/>
         <Route path='/login' element={<LoginPage/>}/>
         <Route path='/message' element={<Message/>}/>
-        <Route path='addfriends' element={<AddFriends/>}/>
+        <Route path='/addfriends' element={<AddFriends/>}/>
+        <Route path='/creategroup' element={<CreateGroup/>}/>
       </Routers>
     </div>
   );

@@ -2,56 +2,51 @@ import React, { useEffect, useState } from 'react';
 import "./Styles/FriendRequest.css";
 
 function FriendRequest({ set }) {
-    const [acceptload,setacceptload]=useState(false)
-    const [mess,setmess]=useState("Accept")
-  const [load, setload] = useState(false);
-  const [data, setdata] = useState([]);
 
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [acceptLoading, setAcceptLoading] = useState({});
+  const [acceptMessages, setAcceptMessages] = useState({});
   const userData = JSON.parse(localStorage.getItem("userSigninData") || "{}");
 
-  const LoadFriendReq = async () => {
-    setload(true);
-    const id = userData._id;
+
+  // Load friend requests
+  const loadFriendReq = async () => {
+
+    setLoading(true);
     try {
-      const res = await fetch(`http://localhost:5000/api/users/load/friend/request/${id}`);
+      const res = await fetch(`http://localhost:5000/api/users/load/friend/request/${userData._id}`);
       const responseData = await res.json();
-
-      console.log(responseData);
-      setdata(Array.isArray(responseData) ? responseData : []);
-
-      setload(false);
+      setData(Array.isArray(responseData) ? responseData : []);
     } catch (error) {
       console.log(error);
-      setload(false);
     }
+    setLoading(false);
   };
-
   useEffect(() => {
-    LoadFriendReq();
+    loadFriendReq();
   }, []);
 
-
-  const Accept=async (e)=>{
-    setacceptload(true);
-    setmess("")
-    const userId=userData._id;
-    const requesterId=e;
-    console.log(userId,requesterId)
+  // Accept friend request
+  const accept = async (requesterId) => {
+    setAcceptLoading(prev => ({ ...prev, [requesterId]: true }));
+    setAcceptMessages(prev => ({ ...prev, [requesterId]: "" }));
     try {
-        const res= await fetch("http://localhost:5000/api/users/friend/request/accept",{
-        method:"POST",
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ userId, requesterId })
-        })
-        const data= await res.json()
-        if(data){
-            setacceptload(false)
-            setmess(data.message)
-        }
+      const res = await fetch("http://localhost:5000/api/users/friend/request/accept", {
+        method: "POST",
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: userData._id, requesterId })
+      });
+      const response = await res.json();
+      setAcceptMessages(prev => ({ ...prev, [requesterId]: response.message }));
+      // Optional: reload requests after accepting
+      loadFriendReq();
     } catch (error) {
-        console.log(error)
+      console.log(error);
+      setAcceptMessages(prev => ({ ...prev, [requesterId]: "Error" }));
     }
-  }
+    setAcceptLoading(prev => ({ ...prev, [requesterId]: false }));
+  };
 
   return (
     <div className='con'>
@@ -62,22 +57,33 @@ function FriendRequest({ set }) {
         </div>
 
         <div className='body'>
-          {load ? (
+          {loading ? (
             <div className='loading'></div>
-          ) : data?<div>No Friend Request</div>:(
-            data.map((req, index) => (
-              <div className='pf' key={index}>
-                <img src={req?.fromUser?.profilePic} alt='' className='profile-img' />
+          ) : data.length === 0 ? (
+            <div className='no-requests'>No Friend Request</div>
+          ) : (
+            data.map((req) => (
+              <div className='pf' key={req._id}>
+                <img 
+                  src={req?.fromUser?.profilePic || "/default-profile.png"} 
+                  alt='' 
+                  className='profile-img' 
+                />
                 <p className='name'>{req?.fromUser?.name}</p>
-                <button className='accept-btn' onClick={()=> Accept(req.fromUser._id)}>{acceptload?<div className='acceptloading'></div>:""}{mess}</button>
+                <button 
+                  className='accept-btn' 
+                  onClick={() => accept(req.fromUser._id)}
+                >
+                  {acceptLoading[req.fromUser._id] ? <div className='acceptloading'></div> : ""}
+                  {acceptMessages[req.fromUser._id] || "Accept"}
+                </button>
               </div>
             ))
           )}
         </div>
-
       </div>
     </div>
   );
-}
+};
 
 export default FriendRequest;
