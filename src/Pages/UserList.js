@@ -59,7 +59,7 @@ fetchGroups();
                             <div key={index} className='user-item' onClick={()=> setUserData(user)}>
                                 <img src={user.profilePic} alt={""} className='user-pic' />
                                 <div className='user-name'>{user.name}</div>
-                                <div className='user-status'> online</div>
+                                <div className='user-status'> {user.isonline?<div className='activ'></div>:null} </div>
                             </div>
                         ))}
                     </div>
