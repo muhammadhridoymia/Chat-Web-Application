@@ -14,7 +14,7 @@ export default function Message() {
 
   const bottomRef = useRef(null);
   const typingTimeoutRef = useRef(null);
-
+  const [openChat,setopenChat]=useState(false)
   const [sender, setSender] = useState(null);
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
@@ -34,9 +34,38 @@ export default function Message() {
   const receiverId = !isGroupChat ? UserData?._id : null;
   const groupId = isGroupChat ? UserData?._id : null;
 
-  // -----------------------------
+
+useEffect(() => {
+  if (!receiverId) return;
+  // Notify backend that user opened the chat
+  socket.emit("chatOpened", { senderId: senderId, receiverId: receiverId });
+}, [receiverId]);
+
+
+
+useEffect(() => {
+  socket.on("messagesSeen", ({ receiverId }) => {
+    // Update only messages sent to this receiver
+    setMessages(prev =>
+      prev.map(msg =>
+        msg.receiverId === receiverId ? { ...msg, seen: true } : msg
+      )
+    );
+
+  });
+
+  return () => {
+    socket.off("messagesSeen");
+    socket.off("newMessage");
+  };
+}, []);
+
+
+
+
+
+
   // Receive Messages
-  // -----------------------------
   useEffect(() => {
     const handleMessage = (data) => {
       if (isGroupChat) {
@@ -58,9 +87,7 @@ export default function Message() {
     };
   }, [senderId, receiverId, groupId, isGroupChat]);
 
-  // -----------------------------
   // Load old messages
-  // -----------------------------
   useEffect(() => {
     const fetchHistory = async () => {
       if (!senderId || !UserData?._id) return;
@@ -72,6 +99,7 @@ export default function Message() {
       try {
         const res = await fetch(url);
         const data = await res.json();
+        console.log("old message data",data)
         setMessages(data || []);
       } catch (err) {
         console.log("History error:", err);
@@ -105,20 +133,15 @@ export default function Message() {
   }, [receiverId, groupId, isGroupChat]);
 
   // Typing indicator sender
-  
   const handleTyping = () => {
     if (!senderId) return;
 
     // Emit typing start
     socket.emit("typing", { senderId, receiverId, groupId, isGroupChat, isTyping: true });
-
-    // Clear previous timeout
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-
-    // Stop typing after 1.5s of inactivity
     typingTimeoutRef.current = setTimeout(() => {
       socket.emit("typing", { senderId, receiverId, groupId, isGroupChat, isTyping: false });
-    }, 1500);
+    }, 2000);
   };
 
   // Send message
@@ -150,10 +173,11 @@ export default function Message() {
 
       {/* Messages */}
       <div className="chat-body">
+      <div className="no-messages">{messages.length === 0 ? <div className="no-messages-body">No messages .Start a Converations</div> : null}</div>
         {messages.map((msg, index) => (
           <div key={index} className={msg.senderId === senderId ? "message-r" : "message-s"}>
             {msg.senderId !== senderId && <div className="sender-profile"></div>}
-            <div>{msg.message}</div>
+            <div>{msg.message}{msg.senderId===senderId?msg.seen?"--✔✔":"----✔":""}</div>
           </div>
         ))}
         {isTyping && (

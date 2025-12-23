@@ -218,6 +218,17 @@
     vertical-align: middle;
     display: inline-block;
 }
+.no-messages{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}
+.no-messages-body{
+    font-size: 20px;
+    color: gray;
+}
+
 .message-r {
     align-self: flex-end;
     background-color: #0a78d1;
