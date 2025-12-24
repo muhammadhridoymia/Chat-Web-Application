@@ -179,6 +179,23 @@
     color: #13b90d;
     margin-left: 5px;
 }
+.file-input {
+  display: none;
+}
+
+
+.add-img-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 18px;
+  transition: background 0.2s ease;
+}
 .chat-icon{
     width:30px;
     height: 30px;
@@ -346,4 +363,35 @@
   40% {
     transform: scale(1);
   }
+}
+
+
+/* Image preview */
+.image-preview-container{
+    display: flex;
+}
+.image-preview {
+    width: 100%;
+    width: 50px;
+  display: flex;
+  align-items: center;
+}
+
+.image-preview img {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.image-preview button {
+  position: fixed;
+  border: none;
+  background:transparent;
+  color: rgb(0, 0, 0);
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  cursor: pointer;
+  direction: initial;
 }
