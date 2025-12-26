@@ -395,3 +395,18 @@
   cursor: pointer;
   direction: initial;
 }
+
+.message-images {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  margin-top: 5px;
+}
+
+.message-images img.chat-img {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 5px;
+}
+

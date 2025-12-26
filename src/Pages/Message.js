@@ -6,8 +6,6 @@ import { CoustomContext } from "./Context";
 import alice from "../Photos/man2.webp";
 import videoCallIcon from "../Photos/videoCall.avif";
 import phoneCallIcon from "../Photos/callLogo.png";
-import Imgadd from "../Photos/ImgAdd.jpg";
-import VoiceIcon from "../Photos/voiceAdd.webp";
 
 export default function Message() {
   const { UserData } = useContext(CoustomContext);
@@ -18,6 +16,9 @@ export default function Message() {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
+
+  const [selectedImage, setSelectedImage] = useState([]);
+  const [imagePreview, setImagePreview] = useState([]);
 
   // Logged-in user
   useEffect(() => {
@@ -33,35 +34,66 @@ export default function Message() {
   const receiverId = !isGroupChat ? UserData?._id : null;
   const groupId = isGroupChat ? UserData?._id : null;
 
-  const [selectedImage, setSelectedImage] = useState([]);
-  const [imagePreview, setImagePreview] = useState([]);
-
-  //Img sending
+  // Image select
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
 
-    setSelectedImage((prev) => [...prev, ...files]);
+    setSelectedImage(files);
 
     const previews = files.map((file) => URL.createObjectURL(file));
-    setImagePreview((prev) => [...prev, ...previews]);
+    setImagePreview(previews);
   };
 
+  // Send message (text + images)
+  const handleSend = async (e) => {
+    e.preventDefault();
+    let imgUrls = [];
+
+    if (selectedImage.length > 0) {
+      const formData = new FormData();
+      selectedImage.forEach((file) => formData.append("images", file));
+
+      try {
+        const res = await fetch("http://localhost:5000/api/users/upload/img", {
+          method: "POST",
+          body: formData,
+        });
+        const data = await res.json();
+        if (data.urls) imgUrls = data.urls;
+      } catch (err) {
+        console.log("Image upload failed", err);
+        return;
+      }
+    }
+
+    if (!message.trim() && imgUrls.length === 0) return;
+
+    const msgObj = {
+      senderId,
+      receiverId,
+      groupId,
+      message,
+      img: imgUrls,
+    };
+
+    if (isGroupChat) socket.emit("sendGroupMessage", msgObj);
+    else socket.emit("sendMessage", msgObj);
+
+    setMessage("");
+    setSelectedImage([]);
+    setImagePreview([]);
+  };
+
+  // Chat opened
   useEffect(() => {
     if (!receiverId || !senderId) return;
-    // Notify backend that user opened the chat
-    socket.emit("chatOpened", { senderId: senderId, receiverId: receiverId });
+    socket.emit("chatOpened", { senderId, receiverId });
   }, [receiverId, senderId]);
 
-  //show message when live
-  const SeenShow = () => {
-    socket.emit("chatOpened", { senderId: senderId, receiverId: receiverId });
-  };
-
+  // Seen messages
   useEffect(() => {
     socket.on("messagesSeen", ({ receiverId }) => {
-      console.log("messagesSeen id  is :", receiverId);
-      // Update only messages sent to this receiver
       setMessages((prev) =>
         prev.map((msg) =>
           msg.receiverId === receiverId ? { ...msg, seen: true } : msg
@@ -71,23 +103,18 @@ export default function Message() {
 
     return () => {
       socket.off("messagesSeen");
-      socket.off("newMessage");
     };
   }, []);
 
-  // Receive Messages
+  // Receive messages
   useEffect(() => {
     const handleMessage = (data) => {
       if (isGroupChat) {
         if (data.groupId === groupId) setMessages((prev) => [...prev, data]);
       } else {
-        if (data.receiverId === senderId) {
-          // SeenShow()
-        }
         const isCurrentChat =
           (data.senderId === receiverId && data.receiverId === senderId) ||
           (data.senderId === senderId && data.receiverId === receiverId);
-
         if (isCurrentChat) setMessages((prev) => [...prev, data]);
       }
     };
@@ -115,7 +142,6 @@ export default function Message() {
       try {
         const res = await fetch(url);
         const data = await res.json();
-        console.log("old message data", data);
         setMessages(data || []);
       } catch (err) {
         console.log("History error:", err);
@@ -125,34 +151,15 @@ export default function Message() {
     fetchHistory();
   }, [senderId, UserData, isGroupChat]);
 
-  // Auto-scroll to bottom
-
+  // Auto-scroll
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isTyping]);
 
-  // Typing indicator listener
-  useEffect(() => {
-    const handleTypingEvent = (data) => {
-      if (
-        (!isGroupChat && data.senderId === receiverId) ||
-        (isGroupChat && data.groupId === groupId)
-      ) {
-        setIsTyping(data.isTyping);
-      }
-    };
-
-    socket.on("typing", handleTypingEvent);
-    return () => {
-      socket.off("typing", handleTypingEvent);
-    };
-  }, [receiverId, groupId, isGroupChat]);
-
-  // Typing indicator sender
+  // Typing indicator
   const handleTyping = () => {
     if (!senderId) return;
 
-    // Emit typing start
     socket.emit("typing", {
       senderId,
       receiverId,
@@ -160,6 +167,7 @@ export default function Message() {
       isGroupChat,
       isTyping: true,
     });
+
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     typingTimeoutRef.current = setTimeout(() => {
       socket.emit("typing", {
@@ -172,19 +180,19 @@ export default function Message() {
     }, 2000);
   };
 
-  // Send message
-  const handleSend = (e) => {
-    e.preventDefault();
-    if (!message.trim()) return;
+  useEffect(() => {
+    const handleTypingEvent = (data) => {
+      if (
+        (!isGroupChat && data.senderId === receiverId) ||
+        (isGroupChat && data.groupId === groupId)
+      ) {
+        setIsTyping(data.isTyping);
+      }
+    };
 
-    if (isGroupChat) {
-      socket.emit("sendGroupMessage", { senderId, groupId, message });
-    } else {
-      socket.emit("sendMessage", { senderId, receiverId, message });
-    }
-
-    setMessage("");
-  };
+    socket.on("typing", handleTypingEvent);
+    return () => socket.off("typing", handleTypingEvent);
+  }, [receiverId, groupId, isGroupChat]);
 
   return (
     <div className="three">
@@ -203,13 +211,11 @@ export default function Message() {
 
       {/* Messages */}
       <div className="chat-body">
-        <div className="no-messages">
-          {messages.length === 0 ? (
-            <div className="no-messages-body">
-              No messages .Start a Converations
-            </div>
-          ) : null}
-        </div>
+        {messages.length === 0 && (
+          <div className="no-messages-body">
+            No messages. Start a conversation
+          </div>
+        )}
         {messages.map((msg, index) => (
           <div
             key={index}
@@ -219,7 +225,14 @@ export default function Message() {
               <div className="sender-profile"></div>
             )}
             <div>
-              {msg.message}
+              {msg.message && <p>{msg.message}</p>}
+              {msg.img && msg.img.length > 0 && (
+                <div className="message-images">
+                  {msg.img.map((imgUrl, i) => (
+                    <img key={i} src={imgUrl} alt="sent" className="chat-img" />
+                  ))}
+                </div>
+              )}
               {msg.senderId === senderId ? (msg.seen ? "--✔✔" : "----✔") : ""}
             </div>
           </div>
@@ -239,7 +252,6 @@ export default function Message() {
 
       {/* Input */}
       <div className="chat-input">
-        {/* Hidden file input */}
         <input
           type="file"
           accept="image/*"
@@ -247,8 +259,6 @@ export default function Message() {
           className="file-input"
           onChange={handleImageChange}
         />
-
-        {/* Attach image button */}
         <label htmlFor="imageUpload" className="add-img-btn">
           📎
         </label>
@@ -265,6 +275,7 @@ export default function Message() {
           />
           <button type="submit">Send</button>
         </form>
+
         {imagePreview.length > 0 && (
           <div className="image-preview-container">
             {imagePreview.map((img, index) => (
