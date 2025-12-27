@@ -364,7 +364,9 @@
     transform: scale(1);
   }
 }
-
+.message-audio{
+    border-radius: 10px;
+}
 
 /* Image preview */
 .image-preview-container{
@@ -395,7 +397,17 @@
   cursor: pointer;
   direction: initial;
 }
+.voice-preview{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
 
+}
+.voice-preview audio{
+    width: 200px;
+    border-radius: 10px;
+}
 .message-images {
   display: flex;
   gap: 5px;
@@ -410,3 +422,32 @@
   border-radius: 5px;
 }
 
+.loader {
+    width: 15px;
+    height: 15px;
+    border: 5px solid #FFF;
+    border-bottom-color: #48eb08;
+    border-radius: 50%;
+    display: inline-block;
+    box-sizing: border-box;
+    animation: rotation 1s linear infinite;
+    }
+
+    @keyframes rotation {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+    } 
+.send-btn:disabled {
+  background-color: #a0cfff;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.no-messages-body{
+    text-align: center;
+    background-color: #bfc0c1;
+}

@@ -1,0 +1,17 @@
+.call-screen {
+  position: fixed;
+  inset: 0;
+  background: #0b0b0b;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.call-screen button {
+  padding: 12px 24px;
+  margin: 10px;
+  font-size: 16px;
+}

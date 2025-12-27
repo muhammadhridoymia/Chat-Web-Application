@@ -6,6 +6,7 @@ import { CoustomContext } from "./Context";
 import alice from "../Photos/man2.webp";
 import videoCallIcon from "../Photos/videoCall.avif";
 import phoneCallIcon from "../Photos/callLogo.png";
+import voiceIcon from "../Photos/voiceIcon.png";
 
 export default function Message() {
   const { UserData } = useContext(CoustomContext);
@@ -16,9 +17,17 @@ export default function Message() {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [voiceloading, setvoiceloading] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [previewAudio, setPreviewAudio] = useState(null);
 
   const [selectedImage, setSelectedImage] = useState([]);
   const [imagePreview, setImagePreview] = useState([]);
+
+  // Refs for MediaRecorder
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
 
   // Logged-in user
   useEffect(() => {
@@ -34,26 +43,90 @@ export default function Message() {
   const receiverId = !isGroupChat ? UserData?._id : null;
   const groupId = isGroupChat ? UserData?._id : null;
 
-  // Image select
+  // Start recording voice
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorderRef.current = new MediaRecorder(stream);
+      audioChunksRef.current = [];
+
+      mediaRecorderRef.current.ondataavailable = (e) => {
+        audioChunksRef.current.push(e.data);
+      };
+
+      mediaRecorderRef.current.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, {
+          type: "audio/webm",
+        });
+        setPreviewAudio(audioBlob);
+        setIsRecording(false);
+        console.log(audioBlob);
+      };
+
+      mediaRecorderRef.current.start();
+      setIsRecording(true);
+    } catch (err) {
+      console.error("Cannot start recording:", err);
+      alert("Microphone access denied or not available.");
+    }
+  };
+
+  // Stop recording
+  const stopRecording = () => {
+    if (!mediaRecorderRef.current) return;
+    mediaRecorderRef.current.stop();
+  };
+
+  // Send voice to backend
+  const sendVoice = async (audioBlob) => {
+    const formData = new FormData();
+    formData.append("voice", audioBlob, "voiceMessage.webm");
+    setvoiceloading(true);
+
+    try {
+      const res = await fetch("http://localhost:5000/api/users/upload/voice", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      console.log("voice data is :", data);
+      if (data.url) {
+        setvoiceloading(false);
+        const msgObj = {
+          senderId,
+          receiverId,
+          groupId,
+          message: "",
+          img: [],
+          voice: data.url,
+        };
+        if (isGroupChat) socket.emit("sendGroupMessage", msgObj);
+        else socket.emit("sendMessage", msgObj);
+        setPreviewAudio(null);
+      }
+    } catch (err) {
+      console.log("Voice upload failed", err);
+    }
+  };
+
+  // Image selection
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
-    if (files.length === 0) return;
-
+    if (!files.length) return;
     setSelectedImage(files);
-
     const previews = files.map((file) => URL.createObjectURL(file));
     setImagePreview(previews);
   };
 
-  // Send message (text + images)
+  // Send text + images
   const handleSend = async (e) => {
     e.preventDefault();
+    setLoading(true);
     let imgUrls = [];
 
     if (selectedImage.length > 0) {
       const formData = new FormData();
       selectedImage.forEach((file) => formData.append("images", file));
-
       try {
         const res = await fetch("http://localhost:5000/api/users/upload/img", {
           method: "POST",
@@ -63,19 +136,14 @@ export default function Message() {
         if (data.urls) imgUrls = data.urls;
       } catch (err) {
         console.log("Image upload failed", err);
+        setLoading(false);
         return;
       }
     }
 
     if (!message.trim() && imgUrls.length === 0) return;
 
-    const msgObj = {
-      senderId,
-      receiverId,
-      groupId,
-      message,
-      img: imgUrls,
-    };
+    const msgObj = { senderId, receiverId, groupId, message, img: imgUrls };
 
     if (isGroupChat) socket.emit("sendGroupMessage", msgObj);
     else socket.emit("sendMessage", msgObj);
@@ -83,6 +151,7 @@ export default function Message() {
     setMessage("");
     setSelectedImage([]);
     setImagePreview([]);
+    setLoading(false);
   };
 
   // Chat opened
@@ -100,15 +169,13 @@ export default function Message() {
         )
       );
     });
-
-    return () => {
-      socket.off("messagesSeen");
-    };
+    return () => socket.off("messagesSeen");
   }, []);
 
   // Receive messages
   useEffect(() => {
     const handleMessage = (data) => {
+      console.log(data);
       if (isGroupChat) {
         if (data.groupId === groupId) setMessages((prev) => [...prev, data]);
       } else {
@@ -134,11 +201,9 @@ export default function Message() {
   useEffect(() => {
     const fetchHistory = async () => {
       if (!senderId || !UserData?._id) return;
-
       const url = isGroupChat
         ? `http://localhost:5000/api/users/old/group/messages/${groupId}`
         : `http://localhost:5000/api/messages/${senderId}/${receiverId}`;
-
       try {
         const res = await fetch(url);
         const data = await res.json();
@@ -147,7 +212,6 @@ export default function Message() {
         console.log("History error:", err);
       }
     };
-
     fetchHistory();
   }, [senderId, UserData, isGroupChat]);
 
@@ -159,7 +223,6 @@ export default function Message() {
   // Typing indicator
   const handleTyping = () => {
     if (!senderId) return;
-
     socket.emit("typing", {
       senderId,
       receiverId,
@@ -167,7 +230,6 @@ export default function Message() {
       isGroupChat,
       isTyping: true,
     });
-
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     typingTimeoutRef.current = setTimeout(() => {
       socket.emit("typing", {
@@ -189,10 +251,17 @@ export default function Message() {
         setIsTyping(data.isTyping);
       }
     };
-
     socket.on("typing", handleTypingEvent);
     return () => socket.off("typing", handleTypingEvent);
   }, [receiverId, groupId, isGroupChat]);
+
+  //Call now
+  const Call = () => {
+    socket.emit("call-user", {
+      from: senderId,
+      to: receiverId,
+    });
+  };
 
   return (
     <div className="three">
@@ -205,8 +274,9 @@ export default function Message() {
             {isGroupChat ? "Group chat" : "Online now"}
           </p>
         </div>
-        <img src={videoCallIcon} alt="" className="chat-icon" />
-        <img src={phoneCallIcon} alt="" className="chat-icon" />
+        <img src={videoCallIcon} alt="video call" className="chat-icon" />
+        {/* thsi for audo call button */}
+        <img src={phoneCallIcon} alt="audio call" className="chat-icon" onClick={()=>Call()}/>
       </div>
 
       {/* Messages */}
@@ -233,6 +303,13 @@ export default function Message() {
                   ))}
                 </div>
               )}
+              {msg.voice && (
+                <audio
+                  controls
+                  src={msg.voice}
+                  className="message-audio"
+                ></audio>
+              )}
               {msg.senderId === senderId ? (msg.seen ? "--✔✔" : "----✔") : ""}
             </div>
           </div>
@@ -252,10 +329,12 @@ export default function Message() {
 
       {/* Input */}
       <div className="chat-input">
+        {/* Image input */}
         <input
           type="file"
           accept="image/*"
           id="imageUpload"
+          multiple
           className="file-input"
           onChange={handleImageChange}
         />
@@ -263,6 +342,19 @@ export default function Message() {
           📎
         </label>
 
+        {/* Voice button */}
+        <img
+          src={voiceIcon}
+          alt="voice"
+          className={`chat-icon ${isRecording ? "recording" : ""}`}
+          onMouseDown={startRecording}
+          onMouseUp={stopRecording}
+          onTouchStart={startRecording}
+          onTouchEnd={stopRecording}
+        />
+        {isRecording && <div className="recording-indicator">Recording...</div>}
+
+        {/* Text + send */}
         <form onSubmit={handleSend} className="message-form">
           <input
             type="text"
@@ -273,9 +365,23 @@ export default function Message() {
               handleTyping();
             }}
           />
-          <button type="submit">Send</button>
+          <button type="submit" disabled={!message} className="send-btn">
+            {loading ? <span className="loader"></span> : "Send"}
+          </button>
         </form>
 
+        {/* Voice preview */}
+        {previewAudio && (
+          <div className="voice-preview">
+            <audio controls src={URL.createObjectURL(previewAudio)}></audio>
+            <button onClick={() => sendVoice(previewAudio)}>
+              {voiceloading ? <div className="loader"></div> : "Send"}
+            </button>
+            <button onClick={() => setPreviewAudio(null)}>X</button>
+          </div>
+        )}
+
+        {/* Image preview */}
         {imagePreview.length > 0 && (
           <div className="image-preview-container">
             {imagePreview.map((img, index) => (
