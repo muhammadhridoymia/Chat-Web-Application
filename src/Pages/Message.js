@@ -2,6 +2,7 @@ import React, { useEffect, useState, useContext, useRef } from "react";
 import "./Styles/Home.css";
 import { socket } from "./socket";
 import { CoustomContext } from "./Context";
+import CallScreen from "./CallScreen";
 
 import alice from "../Photos/man2.webp";
 import videoCallIcon from "../Photos/videoCall.avif";
@@ -21,6 +22,7 @@ export default function Message() {
   const [voiceloading, setvoiceloading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [previewAudio, setPreviewAudio] = useState(null);
+  const [call, setcall] = useState(false);
 
   const [selectedImage, setSelectedImage] = useState([]);
   const [imagePreview, setImagePreview] = useState([]);
@@ -263,6 +265,11 @@ export default function Message() {
     });
   };
 
+  //Start Call
+  if (call) {
+    return <CallScreen senderId={senderId} receiverId={receiverId} />;
+  }
+
   return (
     <div className="three">
       {/* Header */}
@@ -276,7 +283,12 @@ export default function Message() {
         </div>
         <img src={videoCallIcon} alt="video call" className="chat-icon" />
         {/* thsi for audo call button */}
-        <img src={phoneCallIcon} alt="audio call" className="chat-icon" onClick={()=>Call()}/>
+        <img
+          src={phoneCallIcon}
+          alt="audio call"
+          className="chat-icon"
+          onClick={() => setcall(true)}
+        />
       </div>
 
       {/* Messages */}
