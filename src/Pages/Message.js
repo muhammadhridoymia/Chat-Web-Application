@@ -3,6 +3,7 @@ import "./Styles/Home.css";
 import { socket } from "./socket";
 import { CoustomContext } from "./Context";
 import CallScreen from "./CallScreen";
+import Viewer from "./Viewer";
 
 import alice from "../Photos/man2.webp";
 import videoCallIcon from "../Photos/videoCall.avif";
@@ -23,6 +24,8 @@ export default function Message() {
   const [isRecording, setIsRecording] = useState(false);
   const [previewAudio, setPreviewAudio] = useState(null);
   const [call, setcall] = useState(false);
+  const [View,setView]=useState(false)
+  const [viewImg,setviewImg]=useState("")
 
   const [selectedImage, setSelectedImage] = useState([]);
   const [imagePreview, setImagePreview] = useState([]);
@@ -270,6 +273,11 @@ export default function Message() {
     return <CallScreen senderId={senderId} receiverId={receiverId} />;
   }
 
+  const showviewImg=(e)=>{
+    setviewImg(e);
+    setView(true)
+  }
+
   return (
     <div className="three">
       {/* Header */}
@@ -293,10 +301,12 @@ export default function Message() {
 
       {/* Messages */}
       <div className="chat-body">
+        {View?<Viewer images={viewImg} close={setView}/>:""}
         {messages.length === 0 && (
           <div className="no-messages-body">
             No messages. Start a conversation
           </div>
+          
         )}
         {messages.map((msg, index) => (
           <div
@@ -311,7 +321,7 @@ export default function Message() {
               {msg.img && msg.img.length > 0 && (
                 <div className="message-images">
                   {msg.img.map((imgUrl, i) => (
-                    <img key={i} src={imgUrl} alt="sent" className="chat-img" />
+                    <img key={i} src={imgUrl} alt="sent" className="chat-img" onClick={()=>showviewImg(imgUrl)} />
                   ))}
                 </div>
               )}
