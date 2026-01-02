@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import React from 'react'
-import "./Styles/CreateGroup.css";
+import "../Styles/CreateGroup.css";
 
 
 

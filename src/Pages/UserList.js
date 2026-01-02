@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import "./Styles/Home.css";
+import "../Styles/Home.css";
 import notificationIcon from "../Photos/notification.png";
 import { useContext } from "react";
 import { CoustomContext } from "./Context";

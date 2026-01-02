@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import "../Pages/Styles/Signin.css";
+import "../Styles/Signin.css";
 
 
 const SigninPage = () => {

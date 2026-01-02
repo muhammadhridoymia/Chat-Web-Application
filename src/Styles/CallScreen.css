@@ -1,0 +1,99 @@
+.call-screen {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+ 
+}
+
+/* Main card */
+.call-screen > div,
+.call-screen {
+  position: fixed;
+  background: #ffffff;
+  width: 320px;
+  padding: 24px;
+  border-radius: 14px;
+  text-align: center;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+  animation: fadeIn 0.25s ease;
+}
+
+/* Text */
+.call-screen p {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: #222;
+}
+
+/* Calling text */
+.call-screen::before {
+  content: "";
+}
+
+/* Buttons container */
+.call-screen button {
+  border: none;
+  outline: none;
+  padding: 12px 18px;
+  margin: 6px;
+  font-size: 15px;
+  font-weight: 500;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* Call button */
+.call-screen button:first-of-type {
+  background: #2ecc71;
+  color: #fff;
+}
+
+.call-screen button:first-of-type:hover {
+  background: #27ae60;
+}
+
+/* Reject button */
+.call-screen button:last-of-type {
+  background: #e74c3c;
+  color: #fff;
+}
+
+.call-screen button:last-of-type:hover {
+  background: #c0392b;
+}
+
+/* Calling animation */
+.calling-text {
+  font-size: 18px;
+  font-weight: 600;
+  animation: pulse 1.4s infinite;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.4;
+  }
+}

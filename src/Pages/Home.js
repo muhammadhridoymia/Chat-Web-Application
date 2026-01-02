@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import '../Pages/Styles/Home.css'
+import '../Styles/Home.css'
 
 import Menu from './Menu'
 import UserList from './UserList'

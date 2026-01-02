@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "./Styles/Signin.css";
+import "../Styles/Signin.css";
 
 
 const Login = () => {

@@ -1,5 +1,5 @@
 import React from 'react'
-import "./Styles/Viewer.css"
+import "../Styles/Viewer.css"
 
 function Viewer({ images, close }) {
   return (

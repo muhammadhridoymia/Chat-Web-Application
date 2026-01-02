@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import "./Styles/Home.css";
+import "../Styles/Home.css";
 import { useNavigate } from "react-router-dom";
 import photo from "../Photos/man1.avif"
 import AddFriends from "./AddFriends";

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import "./Styles/FriendRequest.css";
+import "../Styles/FriendRequest.css";
 
 function FriendRequest({ set }) {
 

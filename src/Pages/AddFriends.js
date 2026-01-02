@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import "./Styles/AddFriends.css";
+import "../Styles/AddFriends.css";
 
 function AddFriends({ setaddfriend }) {
     const [reqLoading ,setreqLoading]=useState(false)
