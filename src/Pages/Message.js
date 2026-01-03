@@ -11,7 +11,7 @@ import phoneCallIcon from "../Photos/callLogo.png";
 import voiceIcon from "../Photos/voiceIcon.png";
 
 export default function Message() {
-  const { UserData } = useContext(CoustomContext);
+  const { UserData,setTo,setFrom ,showCall,setshowCall} = useContext(CoustomContext);
 
   const bottomRef = useRef(null);
   const typingTimeoutRef = useRef(null);
@@ -23,7 +23,6 @@ export default function Message() {
   const [voiceloading, setvoiceloading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [previewAudio, setPreviewAudio] = useState(null);
-  const [call, setcall] = useState(false);
   const [View, setView] = useState(false);
   const [viewImg, setviewImg] = useState("");
 
@@ -47,6 +46,9 @@ export default function Message() {
   const isGroupChat = UserData?.type === "group";
   const receiverId = !isGroupChat ? UserData?._id : null;
   const groupId = isGroupChat ? UserData?._id : null;
+  //For Call
+  setFrom(senderId)
+  setTo(receiverId)
 
   // Start recording voice
   const startRecording = async () => {
@@ -260,11 +262,6 @@ export default function Message() {
     return () => socket.off("typing", handleTypingEvent);
   }, [receiverId, groupId, isGroupChat]);
 
-  //Start Call
-  if (call) {
-    return <CallScreen senderId={senderId} receiverId={receiverId} />;
-  }
-
   const showviewImg = (e) => {
     setviewImg(e);
     setView(true);
@@ -287,7 +284,7 @@ export default function Message() {
           src={phoneCallIcon}
           alt="audio call"
           className="chat-icon"
-          onClick={() => setcall(true)}
+          onClick={()=> setshowCall(true)}
         />
       </div>
 
