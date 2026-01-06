@@ -1,4 +1,4 @@
-import React, { useContext,useRef,useEffect } from "react";
+import React, { useContext, useRef, useEffect } from "react";
 import { socket } from "../socket";
 import "../../Styles/CallScreen.css";
 import { CoustomContext } from "../Context";
@@ -11,31 +11,66 @@ export default function CallScreen() {
     setIncomingCaller,
     to,
     from,
-    setshowCall
+    setshowCall,
   } = useContext(CoustomContext);
 
   const localAudioRef = useRef(null);
-  const startMic = async () => {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      audio: true,
+  const remoteAudioRef = useRef(null);
+  const peerRef = useRef(null);
+
+  // ---------- CREATE PEER ----------
+  const createPeer = () => {
+    const peer = new RTCPeerConnection({
+      iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
     });
 
-    if (localAudioRef.current) {
-      localAudioRef.current.srcObject = stream;
+    // Receive remote audio
+    peer.ontrack = (event) => {
+      remoteAudioRef.current.srcObject = event.streams[0];
+    };
+
+    // Send ICE candidates
+    peer.onicecandidate = (event) => {
+      if (event.candidate) {
+        socket.emit("ice-candidate", {
+          to,
+          candidate: event.candidate,
+        });
+      }
+    };
+
+    return peer;
+  };
+
+  //Start Mic
+  const startMic = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({audio: true,});
+
+      if (localAudioRef.current) {
+        localAudioRef.current.srcObject = stream;
+      }
+    } catch (err) {
+      alert("Microphone permission denied");
     }
+  };
+  //Stop Mic
+  const stopMic = () => {
+    if (localAudioRef.current?.srcObject) {
+      localAudioRef.current.srcObject
+        .getTracks()
+        .forEach((track) => track.stop());
+      localAudioRef.current.srcObject = null;
+    }
+  };
 
-  } catch (err) {
-    alert("Microphone permission denied");
-  }
-};
-
-useEffect(() => {
-  if (callState === "in-call") {
-    startMic();
-  }
-}, [callState]);
-
+  useEffect(() => {
+    if (callState === "in-call") {
+      startMic();
+    } else {
+      stopMic();
+    }
+  }, [callState]);
 
   const startCall = () => {
     socket.emit("call-user", {
@@ -59,25 +94,31 @@ useEffect(() => {
     });
     setCallState("idle");
     setIncomingCaller(null);
-    setshowCall(false)
-    
+    setshowCall(false);
   };
-  const Cancle=()=>{
-    socket.emit("call-cancle",{to})
-    setCallState("idle")
-  }
+  const cancelCall = () => {
+    socket.emit("call-cancel", { to });
+    setCallState("idle");
+    setshowCall(false);
+  };
 
   //UI
   const renderUI = () => {
     switch (callState) {
       case "idle":
-        return <button className="call-btn" onClick={startCall}>📞 Call</button>;
+        return (
+          <button className="call-btn" onClick={startCall}>
+            📞 Call
+          </button>
+        );
 
       case "calling":
         return (
           <div>
             <div className="calling-text">Calling...</div>
-            <button className="cancle-btn" onClick={Cancle}></button>
+            <button className="cancle-btn" onClick={cancelCall}>
+              📞
+            </button>
           </div>
         );
 
@@ -92,10 +133,13 @@ useEffect(() => {
 
       case "in-call":
         return (
-        <div>
-          <p>Connected</p>
-          <button className="cancle-btn" onClick={Cancle}> </button>
-        </div>)
+          <div>
+            <p>Connected</p>
+            <button className="cancle-btn" onClick={cancelCall}>
+              📞
+            </button>
+          </div>
+        );
 
       default:
         return null;
@@ -107,7 +151,7 @@ useEffect(() => {
       <div className="call-box">
         <audio ref={localAudioRef} autoPlay />
         {renderUI()}
-       </div>
+      </div>
     </div>
   );
 }

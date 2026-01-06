@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect } from "react";
+import React, { createContext, useState, useEffect ,} from "react";
 import { socket } from "../Pages/socket";
 
 export const CoustomContext = createContext();
@@ -13,8 +13,9 @@ export const ContextProvider = ({ children }) => {
   // idle | calling | ringing | in-call
   const [incomingCaller, setIncomingCaller] = useState(null);
 
+
   useEffect(() => {
-    socket.on("incoming-call", ({ from }) => {
+    socket.on("incoming-call", ({from }) => {
       setIncomingCaller(from);
       console.log("incoming-call : ",from)
       setCallState("ringing");
@@ -31,7 +32,7 @@ export const ContextProvider = ({ children }) => {
       alert("Call rejected");
     });
 
-    socket.on("cancled",()=>{
+    socket.on("canceled",()=>{
       setCallState("idle")
     })
 
