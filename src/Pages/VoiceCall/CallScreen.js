@@ -12,13 +12,14 @@ export default function CallScreen() {
     to,
     from,
     setshowCall,
+    peerRef,
+    pendingCandidates,
   } = useContext(CoustomContext);
 
   const localAudioRef = useRef(null);
   const remoteAudioRef = useRef(null);
-  const peerRef = useRef(null);
 
-  // ---------- CREATE PEER ----------
+  // CREATE PEER
   const createPeer = () => {
     const peer = new RTCPeerConnection({
       iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
@@ -42,17 +43,19 @@ export default function CallScreen() {
     return peer;
   };
 
-  //Start Mic
+  // Start Mic
   const startMic = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({audio: true,});
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-      if (localAudioRef.current) {
-        localAudioRef.current.srcObject = stream;
-      }
-    } catch (err) {
-      alert("Microphone permission denied");
-    }
+    // play own mic (muted to avoid echo)
+    localAudioRef.current.srcObject = stream;
+
+    peerRef.current = createPeer();
+
+    // add mic tracks to peer
+    stream
+      .getTracks()
+      .forEach((track) => peerRef.current.addTrack(track, stream));
   };
   //Stop Mic
   const stopMic = () => {
@@ -72,25 +75,48 @@ export default function CallScreen() {
     }
   }, [callState]);
 
-  const startCall = () => {
+  // Start Call
+  const startCall = async () => {
+    setCallState("calling");
+
+    await startMic();
+
+    const offer = await peerRef.current.createOffer();
+    await peerRef.current.setLocalDescription(offer);
+
     socket.emit("call-user", {
       from,
       to,
+      offer,
     });
-    setCallState("calling");
   };
 
-  const acceptCall = () => {
-    socket.emit("accept-call", {
-      from,
-      to: incomingCaller,
-    });
+  const acceptCall = async () => {
     setCallState("in-call");
+
+    await startMic(); // creates peer + adds tracks
+
+    // THIS MUST COME BEFORE ICE
+    await peerRef.current.setRemoteDescription(incomingCaller.offer);
+
+    // NOW it's safe to add ICE
+    pendingCandidates.current.forEach((candidate) => {
+      peerRef.current.addIceCandidate(candidate);
+    });
+    pendingCandidates.current = [];
+
+    const answer = await peerRef.current.createAnswer();
+    await peerRef.current.setLocalDescription(answer);
+
+    socket.emit("accept-call", {
+      to: incomingCaller.from,
+      answer,
+    });
   };
 
   const rejectCall = () => {
     socket.emit("reject-call", {
-      to: incomingCaller,
+      to: incomingCaller.from,
     });
     setCallState("idle");
     setIncomingCaller(null);
@@ -149,7 +175,8 @@ export default function CallScreen() {
   return (
     <div className="call-con">
       <div className="call-box">
-        <audio ref={localAudioRef} autoPlay />
+        <audio ref={localAudioRef} autoPlay muted />
+        <audio ref={remoteAudioRef} autoPlay />
         {renderUI()}
       </div>
     </div>

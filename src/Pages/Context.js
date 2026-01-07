@@ -1,29 +1,41 @@
-import React, { createContext, useState, useEffect ,} from "react";
+import React, { createContext, useState, useEffect, useRef } from "react";
 import { socket } from "../Pages/socket";
 
 export const CoustomContext = createContext();
 
 export const ContextProvider = ({ children }) => {
   const [UserData, setUserData] = useState(null);
-  
-  const [to ,setTo]=useState("")
-  const [from,setFrom]=useState("")
-  const [showCall,setshowCall]=useState(false)
-    const [callState, setCallState] = useState("idle"); 
+
+  const [to, setTo] = useState("");
+  const [from, setFrom] = useState("");
+  const [showCall, setshowCall] = useState(false);
+  const [callState, setCallState] = useState("idle");
   // idle | calling | ringing | in-call
   const [incomingCaller, setIncomingCaller] = useState(null);
-
+  const peerRef = useRef(null);
+  const pendingCandidates = useRef([]);
 
   useEffect(() => {
-    socket.on("incoming-call", ({from }) => {
-      setIncomingCaller(from);
-      console.log("incoming-call : ",from)
+    socket.on("incoming-call", ({ from, offer }) => {
+      setIncomingCaller({ from, offer });
+      console.log("incoming-call : ", from);
       setCallState("ringing");
-      setshowCall(true)
+      setshowCall(true);
     });
 
-    socket.on("call-accepted", () => {
+    socket.on("call-accepted", async ({ answer }) => {
+      await peerRef.current.setRemoteDescription(answer);
       setCallState("in-call");
+    });
+
+    socket.on("ice-candidate", ({ candidate }) => {
+      if (peerRef.current) {
+        peerRef.current.addIceCandidate(candidate);
+        console.log("ICE added immediately");
+      } else {
+        pendingCandidates.current.push(candidate);
+        console.log("ICE stored for later");
+      }
     });
 
     socket.on("call-rejected", () => {
@@ -32,9 +44,9 @@ export const ContextProvider = ({ children }) => {
       alert("Call rejected");
     });
 
-    socket.on("canceled",()=>{
-      setCallState("idle")
-    })
+    socket.on("canceled", () => {
+      setCallState("idle");
+    });
 
     return () => {
       socket.off("incoming-call");
@@ -44,7 +56,24 @@ export const ContextProvider = ({ children }) => {
   }, []);
 
   return (
-    <CoustomContext.Provider value={{ UserData,setUserData,callState,setCallState,setIncomingCaller,incomingCaller,to,setTo,from,setFrom ,showCall,setshowCall}}>
+    <CoustomContext.Provider
+      value={{
+        UserData,
+        setUserData,
+        callState,
+        setCallState,
+        setIncomingCaller,
+        incomingCaller,
+        to,
+        setTo,
+        from,
+        setFrom,
+        showCall,
+        setshowCall,
+        peerRef,
+        pendingCandidates,
+      }}
+    >
       {children}
     </CoustomContext.Provider>
   );
