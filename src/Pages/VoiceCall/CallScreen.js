@@ -67,13 +67,7 @@ export default function CallScreen() {
     }
   };
 
-  useEffect(() => {
-    if (callState === "in-call") {
-      startMic();
-    } else {
-      stopMic();
-    }
-  }, [callState]);
+
 
   // Start Call
   const startCall = async () => {
@@ -124,6 +118,7 @@ export default function CallScreen() {
   };
   const cancelCall = () => {
     socket.emit("call-cancel", { to });
+    stopMic()
     setCallState("idle");
     setshowCall(false);
   };
