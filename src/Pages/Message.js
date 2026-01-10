@@ -2,7 +2,6 @@ import React, { useEffect, useState, useContext, useRef } from "react";
 import "../Styles/Home.css";
 import { socket } from "./socket";
 import { CoustomContext } from "./Context";
-import CallScreen from "../Pages/VoiceCall/CallScreen";
 import Viewer from "./Viewer";
 
 import alice from "../Photos/man2.webp";
@@ -11,7 +10,7 @@ import phoneCallIcon from "../Photos/callLogo.png";
 import voiceIcon from "../Photos/voiceIcon.png";
 
 export default function Message() {
-  const { UserData,setTo,setFrom ,showCall,setshowCall} = useContext(CoustomContext);
+  const { UserData,setTo,setFrom ,setshowCall} = useContext(CoustomContext);
 
   const bottomRef = useRef(null);
   const typingTimeoutRef = useRef(null);

@@ -15,6 +15,9 @@ export const ContextProvider = ({ children }) => {
   const peerRef = useRef(null);
   const pendingCandidates = useRef([]);
 
+  const [callTimer, setCallTimer] = useState(0); // time in seconds
+  const timerRef = useRef(null);
+
   useEffect(() => {
     socket.on("incoming-call", ({ from, offer }) => {
       setIncomingCaller({ from, offer });
@@ -26,6 +29,7 @@ export const ContextProvider = ({ children }) => {
     socket.on("call-accepted", async ({ answer }) => {
       await peerRef.current.setRemoteDescription(answer);
       setCallState("in-call");
+      startTimer()
     });
 
     socket.on("ice-candidate", ({ candidate }) => {
@@ -46,6 +50,7 @@ export const ContextProvider = ({ children }) => {
 
     socket.on("canceled", () => {
       setCallState("idle");
+      stopTimer()
     });
 
     return () => {
@@ -54,6 +59,34 @@ export const ContextProvider = ({ children }) => {
       socket.off("call-rejected");
     };
   }, []);
+
+
+
+
+
+
+    //Timer
+  const startTimer = () => {
+  setCallTimer(0); // reset
+  timerRef.current = setInterval(() => {
+    setCallTimer(prev => prev + 1); // increase every second
+  }, 1000);
+};
+//count Time
+const formatTime = (seconds) => {
+  const m = Math.floor(seconds / 60)
+    .toString()
+    .padStart(2, "0");
+  const s = (seconds % 60).toString().padStart(2, "0");
+  return `${m}:${s}`;
+};
+//Stop Timer
+const stopTimer = () => {
+  if (timerRef.current) {
+    clearInterval(timerRef.current);
+    timerRef.current = null;
+  }
+};
 
   return (
     <CoustomContext.Provider
@@ -72,6 +105,10 @@ export const ContextProvider = ({ children }) => {
         setshowCall,
         peerRef,
         pendingCandidates,
+        callTimer,
+        startTimer,
+        stopTimer,
+        formatTime,
       }}
     >
       {children}

@@ -1,7 +1,8 @@
-import React, { useContext, useRef, useEffect } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { socket } from "../socket";
 import "../../Styles/CallScreen.css";
 import { CoustomContext } from "../Context";
+import Ring from "../../Audio/Ringtone.mp3"
 
 export default function CallScreen() {
   const {
@@ -14,10 +15,16 @@ export default function CallScreen() {
     setshowCall,
     peerRef,
     pendingCandidates,
+    callTimer,
+    startTimer,
+    stopTimer,
+    formatTime,
   } = useContext(CoustomContext);
 
-  const localAudioRef = useRef(null);
   const remoteAudioRef = useRef(null);
+  const ringtoneRef = useRef(null);
+  
+
 
   // CREATE PEER
   const createPeer = () => {
@@ -47,9 +54,6 @@ export default function CallScreen() {
   const startMic = async () => {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-    // play own mic (muted to avoid echo)
-    localAudioRef.current.srcObject = stream;
-
     peerRef.current = createPeer();
 
     // add mic tracks to peer
@@ -57,17 +61,29 @@ export default function CallScreen() {
       .getTracks()
       .forEach((track) => peerRef.current.addTrack(track, stream));
   };
+
   //Stop Mic
-  const stopMic = () => {
-    if (localAudioRef.current?.srcObject) {
-      localAudioRef.current.srcObject
+  const StopMic = () => {
+    // 1. Stop sending mic
+    if (peerRef.current) {
+      peerRef.current.getSenders().forEach((sender) => {
+        if (sender.track) sender.track.stop();
+      });
+
+      // 2. Close WebRTC connection
+      peerRef.current.close();
+      peerRef.current = null;
+    }
+
+    // 3. Stop remote audio playback
+    if (remoteAudioRef.current?.srcObject) {
+      remoteAudioRef.current.srcObject
         .getTracks()
         .forEach((track) => track.stop());
-      localAudioRef.current.srcObject = null;
+
+      remoteAudioRef.current.srcObject = null;
     }
   };
-
-
 
   // Start Call
   const startCall = async () => {
@@ -88,7 +104,7 @@ export default function CallScreen() {
   const acceptCall = async () => {
     setCallState("in-call");
 
-    await startMic(); // creates peer + adds tracks
+    await startMic();
 
     // THIS MUST COME BEFORE ICE
     await peerRef.current.setRemoteDescription(incomingCaller.offer);
@@ -106,6 +122,7 @@ export default function CallScreen() {
       to: incomingCaller.from,
       answer,
     });
+    startTimer();
   };
 
   const rejectCall = () => {
@@ -118,10 +135,29 @@ export default function CallScreen() {
   };
   const cancelCall = () => {
     socket.emit("call-cancel", { to });
-    stopMic()
+    StopMic();
+    stopTimer();
     setCallState("idle");
     setshowCall(false);
   };
+
+
+  useEffect(() => {
+  if (callState === "ringing") {
+    ringtoneRef.current.muted = true;
+    ringtoneRef.current.play()
+      .then(() => {
+        ringtoneRef.current.muted = false;
+      })
+      .catch(err => console.log("Ringtone error:", err));
+  } else {
+    if (ringtoneRef.current) {
+      ringtoneRef.current.pause();
+      ringtoneRef.current.currentTime = 0;
+    }
+  }
+}, [callState]);
+
 
   //UI
   const renderUI = () => {
@@ -167,12 +203,21 @@ export default function CallScreen() {
     }
   };
 
+
+
+
   return (
     <div className="call-con">
       <div className="call-box">
-        <audio ref={localAudioRef} autoPlay muted />
-        <audio ref={remoteAudioRef} autoPlay />
-        {renderUI()}
+        <div className="close">
+          <button onClick={() => setshowCall(false)}>X</button>
+        </div>
+        <div className="body">
+          <p className="timer">Time: {formatTime(callTimer)}</p> {/* show timer */}
+          <audio ref={remoteAudioRef} autoPlay />
+          <audio ref={ringtoneRef} src={Ring} loop />
+          {renderUI()}
+        </div>
       </div>
     </div>
   );
