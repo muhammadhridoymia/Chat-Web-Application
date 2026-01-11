@@ -29,16 +29,16 @@ export const ContextProvider = ({ children }) => {
     socket.on("call-accepted", async ({ answer }) => {
       await peerRef.current.setRemoteDescription(answer);
       setCallState("in-call");
-      startTimer()
+      startTimer();
     });
 
     socket.on("ice-candidate", ({ candidate }) => {
-      if (peerRef.current) {
+      if (!candidate || !candidate.candidate) return;
+
+      if (peerRef.current && peerRef.current.remoteDescription) {
         peerRef.current.addIceCandidate(candidate);
-        console.log("ICE added immediately");
       } else {
         pendingCandidates.current.push(candidate);
-        console.log("ICE stored for later");
       }
     });
 
@@ -50,7 +50,7 @@ export const ContextProvider = ({ children }) => {
 
     socket.on("canceled", () => {
       setCallState("idle");
-      stopTimer()
+      stopTimer();
     });
 
     return () => {
@@ -60,33 +60,28 @@ export const ContextProvider = ({ children }) => {
     };
   }, []);
 
-
-
-
-
-
-    //Timer
+  //Timer
   const startTimer = () => {
-  setCallTimer(0); // reset
-  timerRef.current = setInterval(() => {
-    setCallTimer(prev => prev + 1); // increase every second
-  }, 1000);
-};
-//count Time
-const formatTime = (seconds) => {
-  const m = Math.floor(seconds / 60)
-    .toString()
-    .padStart(2, "0");
-  const s = (seconds % 60).toString().padStart(2, "0");
-  return `${m}:${s}`;
-};
-//Stop Timer
-const stopTimer = () => {
-  if (timerRef.current) {
-    clearInterval(timerRef.current);
-    timerRef.current = null;
-  }
-};
+    setCallTimer(0); // reset
+    timerRef.current = setInterval(() => {
+      setCallTimer((prev) => prev + 1); // increase every second
+    }, 1000);
+  };
+  //count Time
+  const formatTime = (seconds) => {
+    const m = Math.floor(seconds / 60)
+      .toString()
+      .padStart(2, "0");
+    const s = (seconds % 60).toString().padStart(2, "0");
+    return `${m}:${s}`;
+  };
+  //Stop Timer
+  const stopTimer = () => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+  };
 
   return (
     <CoustomContext.Provider
