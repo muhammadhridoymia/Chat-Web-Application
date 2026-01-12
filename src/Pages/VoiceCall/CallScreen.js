@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useRef, useState } from "react";
 import { socket } from "../socket";
 import "../../Styles/CallScreen.css";
 import { CoustomContext } from "../Context";
-import Ring from "../../Audio/Ringtone.mp3"
+import Ring from "../../Audio/Ringtone.mp3";
 
 export default function CallScreen() {
   const {
@@ -23,8 +23,6 @@ export default function CallScreen() {
 
   const remoteAudioRef = useRef(null);
   const ringtoneRef = useRef(null);
-  
-
 
   // CREATE PEER
   const createPeer = () => {
@@ -110,9 +108,13 @@ export default function CallScreen() {
     await peerRef.current.setRemoteDescription(incomingCaller.offer);
 
     // NOW it's safe to add ICE
-    pendingCandidates.current.forEach((candidate) => {
-      peerRef.current.addIceCandidate(candidate);
-    });
+    for (const candidate of pendingCandidates.current) {
+      try {
+        await peerRef.current.addIceCandidate(new RTCIceCandidate(candidate));
+      } catch (err) {
+        console.warn("Error adding pending candidate on accept:", err);
+      }
+    }
     pendingCandidates.current = [];
 
     const answer = await peerRef.current.createAnswer();
@@ -141,23 +143,22 @@ export default function CallScreen() {
     setshowCall(false);
   };
 
-
   useEffect(() => {
-  if (callState === "ringing") {
-    ringtoneRef.current.muted = true;
-    ringtoneRef.current.play()
-      .then(() => {
-        ringtoneRef.current.muted = false;
-      })
-      .catch(err => console.log("Ringtone error:", err));
-  } else {
-    if (ringtoneRef.current) {
-      ringtoneRef.current.pause();
-      ringtoneRef.current.currentTime = 0;
+    if (callState === "ringing") {
+      ringtoneRef.current.muted = true;
+      ringtoneRef.current
+        .play()
+        .then(() => {
+          ringtoneRef.current.muted = false;
+        })
+        .catch((err) => console.log("Ringtone error:", err));
+    } else {
+      if (ringtoneRef.current) {
+        ringtoneRef.current.pause();
+        ringtoneRef.current.currentTime = 0;
+      }
     }
-  }
-}, [callState]);
-
+  }, [callState]);
 
   //UI
   const renderUI = () => {
@@ -203,9 +204,6 @@ export default function CallScreen() {
     }
   };
 
-
-
-
   return (
     <div className="call-con">
       <div className="call-box">
@@ -213,7 +211,8 @@ export default function CallScreen() {
           <button onClick={() => setshowCall(false)}>X</button>
         </div>
         <div className="body">
-          <p className="timer">Time: {formatTime(callTimer)}</p> {/* show timer */}
+          <p className="timer">Time: {formatTime(callTimer)}</p>{" "}
+          {/* show timer */}
           <audio ref={remoteAudioRef} autoPlay />
           <audio ref={ringtoneRef} src={Ring} loop />
           {renderUI()}

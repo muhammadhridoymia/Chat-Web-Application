@@ -27,19 +27,53 @@ export const ContextProvider = ({ children }) => {
     });
 
     socket.on("call-accepted", async ({ answer }) => {
-      await peerRef.current.setRemoteDescription(answer);
-      setCallState("in-call");
-      startTimer();
+      try {
+        await peerRef.current.setRemoteDescription(answer);
+
+        // flush any queued ICE candidates that arrived before the remote description
+        if (pendingCandidates.current.length > 0) {
+          for (const c of pendingCandidates.current) {
+            try {
+              await peerRef.current.addIceCandidate(new RTCIceCandidate(c));
+            } catch (err) {
+              console.warn("addIceCandidate failed (post-answer):", err);
+            }
+          }
+          pendingCandidates.current = [];
+        }
+
+        setCallState("in-call");
+        startTimer();
+      } catch (err) {
+        console.error(
+          "Error setting remote description on call-accepted:",
+          err
+        );
+      }
     });
 
     socket.on("ice-candidate", ({ candidate }) => {
       if (!candidate || !candidate.candidate) return;
 
-      if (peerRef.current && peerRef.current.remoteDescription) {
-        peerRef.current.addIceCandidate(candidate);
-      } else {
-        pendingCandidates.current.push(candidate);
-      }
+      // try to add immediately; if it fails or remoteDescription isn't ready, queue it
+      (async () => {
+        try {
+          if (
+            peerRef.current &&
+            peerRef.current.remoteDescription &&
+            peerRef.current.remoteDescription.type
+          ) {
+            await peerRef.current.addIceCandidate(
+              new RTCIceCandidate(candidate)
+            );
+          } else {
+            pendingCandidates.current.push(candidate);
+          }
+        } catch (err) {
+          console.warn("Failed to add ICE candidate, queuing:", err);
+          pendingCandidates.current.push(candidate);
+        }
+      })();
     });
 
     socket.on("call-rejected", () => {
